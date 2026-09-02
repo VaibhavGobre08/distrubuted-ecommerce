@@ -11,6 +11,13 @@ public record CreateOrderRequest(
         Long customerId,
 
         @NotNull
+        Long productId,
+
+        @NotNull
+        @Positive
+        Integer quantity,
+
+        @NotNull
         @Positive
         BigDecimal totalAmount
 ) {

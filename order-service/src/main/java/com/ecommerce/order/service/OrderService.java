@@ -3,7 +3,10 @@ package com.ecommerce.order.service;
 import com.ecommerce.order.dto.CreateOrderRequest;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderStatus;
+import com.ecommerce.order.event.OrderCreatedEvent;
+import com.ecommerce.order.kafka.OrderEventProducer;
 import com.ecommerce.order.repository.OrderRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,21 +15,44 @@ import java.time.LocalDateTime;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderEventProducer orderEventProducer;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(
+            OrderRepository orderRepository,
+            OrderEventProducer orderEventProducer) {
+
         this.orderRepository = orderRepository;
+        this.orderEventProducer = orderEventProducer;
     }
 
     public Order createOrder(CreateOrderRequest request) {
 
+        // 1. Create order
         Order order = new Order();
 
         order.setCustomerId(request.customerId());
         order.setTotalAmount(request.totalAmount());
         order.setStatus(OrderStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
+        order.setProductId(request.productId());
+        order.setQuantity(request.quantity());
 
-        return orderRepository.save(order);
+        // 2. Save order
+        Order savedOrder = orderRepository.save(order);
+
+        // 3. Create Kafka event
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getId(),
+                savedOrder.getCustomerId(),
+                savedOrder.getProductId(),
+                savedOrder.getQuantity(),
+                savedOrder.getTotalAmount()
+        );
+
+        // 4. Publish event
+        orderEventProducer.publishOrderCreated(event);
+
+        return savedOrder;
     }
 
     public Order getOrder(Long id) {

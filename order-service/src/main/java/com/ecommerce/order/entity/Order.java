@@ -15,6 +15,11 @@ public class Order {
     private Long customerId;
 
     private BigDecimal totalAmount;
+    
+    private Integer quantity;
+    
+    private Long productId;
+
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -71,5 +76,21 @@ public class Order {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 }
