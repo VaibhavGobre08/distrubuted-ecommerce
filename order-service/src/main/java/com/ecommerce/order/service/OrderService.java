@@ -19,12 +19,20 @@ public class OrderService {
 
     public Order createOrder(CreateOrderRequest request) {
 
-    	Order order = new Order();
-    	order.setCustomerId(request.customerId());
-    	order.setTotalAmount(request.totalAmount());
-    	order.setStatus(OrderStatus.PENDING);
-    	order.setCreatedAt(LocalDateTime.now());
+        Order order = new Order();
+
+        order.setCustomerId(request.customerId());
+        order.setTotalAmount(request.totalAmount());
+        order.setStatus(OrderStatus.PENDING);
+        order.setCreatedAt(LocalDateTime.now());
 
         return orderRepository.save(order);
+    }
+
+    public Order getOrder(Long id) {
+
+        return orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Order not found: " + id));
     }
 }
