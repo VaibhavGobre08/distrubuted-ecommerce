@@ -13,7 +13,6 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // Constructor injection
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
@@ -24,5 +23,10 @@ public class OrderController {
             @Valid @RequestBody CreateOrderRequest request) {
 
         return orderService.createOrder(request);
+    }
+
+    @GetMapping("/{id}")
+    public Order getOrder(@PathVariable Long id) {
+        return orderService.getOrder(id);
     }
 }
