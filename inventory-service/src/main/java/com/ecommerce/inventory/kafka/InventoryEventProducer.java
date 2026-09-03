@@ -73,4 +73,24 @@ public class InventoryEventProducer {
 
         System.out.println("Published inventory.failed");
     }
+    
+    public void publishReleased(Long orderId) {
+
+        String message = """
+                {
+                    "orderId": %d
+                }
+                """.formatted(orderId);
+
+        kafkaTemplate.send(
+                "inventory.released",
+                orderId.toString(),
+                message
+        );
+
+        System.out.println("=================================");
+        System.out.println("Published inventory.released");
+        System.out.println("Event: " + message);
+        System.out.println("=================================");
+    }
 }

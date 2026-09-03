@@ -77,4 +77,19 @@ public class OrderService {
         System.out.println("Order ID: " + orderId);
         System.out.println("=================================");
     }
+    
+    public void cancelOrder(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new RuntimeException("Order not found: " + orderId));
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        System.out.println("=================================");
+        System.out.println("Order cancelled");
+        System.out.println("Order ID: " + orderId);
+        System.out.println("=================================");
+    }
 }
