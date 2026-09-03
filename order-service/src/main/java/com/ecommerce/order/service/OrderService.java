@@ -61,4 +61,20 @@ public class OrderService {
                 .orElseThrow(() ->
                         new RuntimeException("Order not found: " + id));
     }
+    
+    public void confirmOrder(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new RuntimeException("Order not found: " + orderId));
+
+        order.setStatus(OrderStatus.CONFIRMED);
+
+        orderRepository.save(order);
+
+        System.out.println("=================================");
+        System.out.println("Order confirmed");
+        System.out.println("Order ID: " + orderId);
+        System.out.println("=================================");
+    }
 }

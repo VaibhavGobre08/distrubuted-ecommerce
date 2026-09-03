@@ -8,9 +8,7 @@ public class ShippingEventConsumer {
 
     private final ShippingEventProducer shippingEventProducer;
 
-    public ShippingEventConsumer(
-            ShippingEventProducer shippingEventProducer) {
-
+    public ShippingEventConsumer(ShippingEventProducer shippingEventProducer) {
         this.shippingEventProducer = shippingEventProducer;
     }
 
