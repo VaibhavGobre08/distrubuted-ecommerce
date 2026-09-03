@@ -1,11 +1,9 @@
 package com.ecommerce.inventory.service;
 
-import com.ecommerce.inventory.dto.CreateProductRequest;
 import com.ecommerce.inventory.entity.Product;
 import com.ecommerce.inventory.repository.ProductRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class InventoryService {
@@ -16,25 +14,32 @@ public class InventoryService {
         this.productRepository = productRepository;
     }
 
-    public Product createProduct(CreateProductRequest request) {
+    @Transactional
+    public boolean reserveStock(Long productId, Integer quantity) {
 
-        Product product = new Product();
-
-        product.setName(request.name());
-        product.setPrice(request.price());
-        product.setStock(request.stock());
-
-        return productRepository.save(product);
-    }
-
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
-    public Product getProduct(Long id) {
-
-        return productRepository.findById(id)
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found: " + id));
+                        new RuntimeException(
+                                "Product not found: " + productId));
+
+        System.out.println("Product: " + product.getName());
+        System.out.println("Available stock: " + product.getStock());
+        System.out.println("Requested quantity: " + quantity);
+
+        if (product.getStock() < quantity) {
+
+            System.out.println("❌ Insufficient stock");
+
+            return false;
+        }
+
+        product.setStock(product.getStock() - quantity);
+
+        productRepository.save(product);
+
+        System.out.println("✅ Stock reserved successfully");
+        System.out.println("Remaining stock: " + product.getStock());
+
+        return true;
     }
 }
