@@ -4,34 +4,28 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PaymentEventConsumer {
+public class ShippingEventConsumer {
 
-    private final ShippingEventProducer shippingEventProducer;
+    private final SagaEventProducer sagaEventProducer;
 
-    public PaymentEventConsumer(
-            ShippingEventProducer shippingEventProducer) {
-
-        this.shippingEventProducer = shippingEventProducer;
+    public ShippingEventConsumer(SagaEventProducer sagaEventProducer) {
+        this.sagaEventProducer = sagaEventProducer;
     }
 
     @KafkaListener(
-            topics = "payment.success",
-            groupId = "saga-orchestrator-group"
+            topics = "shipping.created",
+            groupId = "saga-orchestrator-shipping-group"
     )
     public void consume(String message) {
 
         System.out.println("=================================");
-        System.out.println("Saga received payment.success");
-        System.out.println("Payment Event: " + message);
+        System.out.println("Saga Orchestrator received shipping.created");
+        System.out.println("Event: " + message);
         System.out.println("=================================");
 
         Long orderId = extractLong(message, "orderId");
-        Long customerId = extractLong(message, "customerId");
 
-        shippingEventProducer.createShipment(
-                orderId,
-                customerId
-        );
+        sagaEventProducer.confirmOrder(orderId);
     }
 
     private Long extractLong(String json, String field) {
