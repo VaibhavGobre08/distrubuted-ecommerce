@@ -31,4 +31,47 @@ public class SagaEventProducer {
         System.out.println("Event: " + message);
         System.out.println("=================================");
     }
+    
+    public void releaseInventory(
+            Long orderId,
+            Long customerId) {
+
+        String message = """
+                {
+                    "orderId": %d,
+                    "customerId": %d
+                }
+                """.formatted(orderId, customerId);
+
+        kafkaTemplate.send(
+                "inventory.release",
+                orderId.toString(),
+                message
+        );
+
+        System.out.println("=================================");
+        System.out.println("Published inventory.release");
+        System.out.println("Event: " + message);
+        System.out.println("=================================");
+    }
+    
+    public void cancelOrder(Long orderId) {
+
+        String message = """
+                {
+                    "orderId": %d
+                }
+                """.formatted(orderId);
+
+        kafkaTemplate.send(
+                "order.cancel",
+                orderId.toString(),
+                message
+        );
+
+        System.out.println("=================================");
+        System.out.println("Published order.cancel");
+        System.out.println("Event: " + message);
+        System.out.println("=================================");
+    }
 }

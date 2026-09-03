@@ -1,20 +1,15 @@
 package com.ecommerce.payment.kafka;
 
-import com.ecommerce.payment.service.PaymentService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentEventConsumer {
 
-    private final PaymentService paymentService;
     private final PaymentEventProducer paymentEventProducer;
 
     public PaymentEventConsumer(
-            PaymentService paymentService,
             PaymentEventProducer paymentEventProducer) {
-
-        this.paymentService = paymentService;
         this.paymentEventProducer = paymentEventProducer;
     }
 
@@ -32,15 +27,11 @@ public class PaymentEventConsumer {
         Long orderId = extractLong(message, "orderId");
         Long customerId = extractLong(message, "customerId");
 
-        boolean successful =
-                paymentService.processPayment(
-                        orderId,
-                        customerId
-                );
+        // For testing compensation flow,
+        // intentionally fail the payment.
+        boolean paymentSuccessful = false;
 
-        if (successful) {
-
-            System.out.println("Payment successful");
+        if (paymentSuccessful) {
 
             paymentEventProducer.publishSuccess(
                     orderId,
@@ -48,8 +39,6 @@ public class PaymentEventConsumer {
             );
 
         } else {
-
-            System.out.println("Payment failed");
 
             paymentEventProducer.publishFailed(
                     orderId,

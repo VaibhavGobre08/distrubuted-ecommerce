@@ -10,7 +10,6 @@ public class PaymentEventProducer {
 
     public PaymentEventProducer(
             KafkaTemplate<String, String> kafkaTemplate) {
-
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -23,21 +22,13 @@ public class PaymentEventProducer {
                     "orderId": %d,
                     "customerId": %d
                 }
-                """.formatted(
-                orderId,
-                customerId
-        );
+                """.formatted(orderId, customerId);
 
         kafkaTemplate.send(
                 "payment.success",
                 orderId.toString(),
                 message
         );
-
-        System.out.println("=================================");
-        System.out.println("Published payment.success");
-        System.out.println("Event: " + message);
-        System.out.println("=================================");
     }
 
     public void publishFailed(
@@ -49,10 +40,7 @@ public class PaymentEventProducer {
                     "orderId": %d,
                     "customerId": %d
                 }
-                """.formatted(
-                orderId,
-                customerId
-        );
+                """.formatted(orderId, customerId);
 
         kafkaTemplate.send(
                 "payment.failed",
@@ -60,9 +48,6 @@ public class PaymentEventProducer {
                 message
         );
 
-        System.out.println("=================================");
-        System.out.println("Published payment.failed");
-        System.out.println("Event: " + message);
-        System.out.println("=================================");
+        System.out.println("Payment failed event published");
     }
 }
