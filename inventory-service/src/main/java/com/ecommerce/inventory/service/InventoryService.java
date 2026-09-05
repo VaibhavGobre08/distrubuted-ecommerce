@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
 
 @Service
 public class InventoryService {
@@ -34,21 +35,44 @@ public class InventoryService {
             Long productId,
             Integer quantity) {
 
+        // Check whether this order was already processed
+        Optional<InventoryReservation> existingReservation =
+                reservationRepository.findByOrderId(orderId);
+
+        if (existingReservation.isPresent()) {
+
+            InventoryReservation reservation =
+                    existingReservation.get();
+
+            System.out.println("=================================");
+            System.out.println("Duplicate inventory reservation");
+            System.out.println("Order ID: " + orderId);
+            System.out.println("Existing status: "
+                    + reservation.getStatus());
+            System.out.println("=================================");
+
+            return "RESERVED".equals(reservation.getStatus());
+        }
+
+        // Find product
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Product not found: " + productId));
 
+        // Check stock
         if (product.getStock() < quantity) {
             return false;
         }
 
+        // Reduce stock
         product.setStock(
                 product.getStock() - quantity
         );
 
         productRepository.save(product);
 
+        // Create reservation
         InventoryReservation reservation =
                 new InventoryReservation();
 
@@ -63,50 +87,5 @@ public class InventoryService {
         return true;
     }
     
-    @Transactional
-    public boolean releaseStock(Long orderId) {
 
-        InventoryReservation reservation =
-                reservationRepository.findByOrderId(orderId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Reservation not found for order: " + orderId));
-
-        // Idempotency:
-        // If compensation is received twice, don't restore stock twice.
-        if ("RELEASED".equals(reservation.getStatus())) {
-            return true;
-        }
-
-        // Only RESERVED stock can be released.
-        if (!"RESERVED".equals(reservation.getStatus())) {
-            return false;
-        }
-
-        Product product = productRepository.findById(
-                reservation.getProductId()
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Product not found: " + reservation.getProductId()));
-
-        // Restore the reserved quantity
-        product.setStock(
-                product.getStock() + reservation.getQuantity()
-        );
-
-        productRepository.save(product);
-
-        // Mark reservation as released
-        reservation.setStatus("RELEASED");
-        reservationRepository.save(reservation);
-
-        System.out.println("=================================");
-        System.out.println("Inventory compensation completed");
-        System.out.println("Order ID: " + orderId);
-        System.out.println("Product ID: " + reservation.getProductId());
-        System.out.println("Quantity restored: " + reservation.getQuantity());
-        System.out.println("=================================");
-
-        return true;
-    }
 }
