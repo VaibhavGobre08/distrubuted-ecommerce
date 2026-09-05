@@ -3,11 +3,13 @@ package com.ecommerce.order.service;
 import com.ecommerce.order.dto.CreateOrderRequest;
 import com.ecommerce.order.entity.Order;
 import com.ecommerce.order.entity.OrderStatus;
-import com.ecommerce.order.event.OrderCreatedEvent;
-import com.ecommerce.order.kafka.OrderEventProducer;
+import com.ecommerce.order.entity.OutboxEvent;
 import com.ecommerce.order.repository.OrderRepository;
+import com.ecommerce.order.repository.OutboxEventRepository;
+import com.ecommerce.order.event.OrderCreatedEvent;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -15,32 +17,33 @@ import java.time.LocalDateTime;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderEventProducer orderEventProducer;
+    private final OutboxEventRepository outboxEventRepository;
 
     public OrderService(
             OrderRepository orderRepository,
-            OrderEventProducer orderEventProducer) {
+            OutboxEventRepository outboxEventRepository) {
 
         this.orderRepository = orderRepository;
-        this.orderEventProducer = orderEventProducer;
+        this.outboxEventRepository = outboxEventRepository;
     }
 
+    @Transactional
     public Order createOrder(CreateOrderRequest request) {
 
-        // 1. Create order
+        // 1. Create Order
         Order order = new Order();
 
         order.setCustomerId(request.customerId());
+        order.setProductId(request.productId());
+        order.setQuantity(request.quantity());
         order.setTotalAmount(request.totalAmount());
         order.setStatus(OrderStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
-        order.setProductId(request.productId());
-        order.setQuantity(request.quantity());
 
-        // 2. Save order
+        // 2. Save Order
         Order savedOrder = orderRepository.save(order);
 
-        // 3. Create Kafka event
+        // 3. Create Kafka event payload
         OrderCreatedEvent event = new OrderCreatedEvent(
                 savedOrder.getId(),
                 savedOrder.getCustomerId(),
@@ -49,8 +52,43 @@ public class OrderService {
                 savedOrder.getTotalAmount()
         );
 
-        // 4. Publish event
-        orderEventProducer.publishOrderCreated(event);
+        String payload = """
+                {
+                    "orderId": %d,
+                    "customerId": %d,
+                    "productId": %d,
+                    "quantity": %d,
+                    "totalAmount": %s
+                }
+                """.formatted(
+                event.getOrderId(),
+                event.getCustomerId(),
+                event.getProductId(),
+                event.getQuantity(),
+                event.getTotalAmount()
+        );
+
+        // 4. Save event in Outbox table
+        OutboxEvent outboxEvent = new OutboxEvent();
+
+        outboxEvent.setEventType("OrderCreated");
+        outboxEvent.setAggregateType("Order");
+        outboxEvent.setAggregateId(
+                savedOrder.getId().toString()
+        );
+        outboxEvent.setPayload(payload);
+        outboxEvent.setStatus("PENDING");
+        outboxEvent.setRetryCount(0);
+        outboxEvent.setNextRetryAt(LocalDateTime.now());
+        outboxEvent.setCreatedAt(LocalDateTime.now());
+
+        outboxEventRepository.save(outboxEvent);
+
+        System.out.println("=================================");
+        System.out.println("Order + Outbox Event saved");
+        System.out.println("Order ID: " + savedOrder.getId());
+        System.out.println("Outbox Event: " + payload);
+        System.out.println("=================================");
 
         return savedOrder;
     }
@@ -59,37 +97,29 @@ public class OrderService {
 
         return orderRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Order not found: " + id));
+                        new RuntimeException(
+                                "Order not found: " + id));
     }
-    
+
     public void confirmOrder(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
-                        new RuntimeException("Order not found: " + orderId));
+                        new RuntimeException(
+                                "Order not found: " + orderId));
 
         order.setStatus(OrderStatus.CONFIRMED);
-
         orderRepository.save(order);
-
-        System.out.println("=================================");
-        System.out.println("Order confirmed");
-        System.out.println("Order ID: " + orderId);
-        System.out.println("=================================");
     }
-    
+
     public void cancelOrder(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
-                        new RuntimeException("Order not found: " + orderId));
+                        new RuntimeException(
+                                "Order not found: " + orderId));
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
-
-        System.out.println("=================================");
-        System.out.println("Order cancelled");
-        System.out.println("Order ID: " + orderId);
-        System.out.println("=================================");
     }
 }
