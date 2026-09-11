@@ -3,6 +3,7 @@ package com.ecommerce.auth_service.controller;
 import com.ecommerce.auth_service.dto.LoginRequest;
 import com.ecommerce.auth_service.dto.LoginResponse;
 import com.ecommerce.auth_service.dto.RegisterRequest;
+import com.ecommerce.auth_service.dto.UserResponse;
 import com.ecommerce.auth_service.entity.User;
 import com.ecommerce.auth_service.service.AuthService;
 
@@ -23,7 +24,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public User register(
+    public UserResponse register(
             @Valid @RequestBody RegisterRequest request) {
 
         return authService.register(request);

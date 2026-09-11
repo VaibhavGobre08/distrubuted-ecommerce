@@ -7,6 +7,7 @@ import com.ecommerce.order.entity.OutboxEvent;
 import com.ecommerce.order.repository.OrderRepository;
 import com.ecommerce.order.repository.OutboxEventRepository;
 import com.ecommerce.order.event.OrderCreatedEvent;
+import com.ecommerce.order.exception.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,16 +98,18 @@ public class OrderService {
 
         return orderRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Order not found: " + id));
+                new ResourceNotFoundException(
+                        "Order not found: " + id
+                ));
     }
 
     public void confirmOrder(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Order not found: " + orderId));
+                new ResourceNotFoundException(
+                        "Order not found: " + orderId
+                ));
 
         order.setStatus(OrderStatus.CONFIRMED);
         orderRepository.save(order);
@@ -116,8 +119,9 @@ public class OrderService {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Order not found: " + orderId));
+                new ResourceNotFoundException(
+                        "Order not found: " + orderId
+                ));
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
