@@ -24,6 +24,9 @@ public class Order {
     private Integer quantity;
     
     private Long productId;
+    
+    @Version
+    private Long version;
 
 
     @Enumerated(EnumType.STRING)
