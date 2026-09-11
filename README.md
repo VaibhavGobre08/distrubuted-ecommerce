@@ -1,4 +1,4 @@
-# Distributed E-Commerce Platform
+# OrderFlow Distributed E-Commerce Platform
 
 A production-style **distributed e-commerce platform** built using **Java, Spring Boot, Kafka, PostgreSQL, Docker, and microservices architecture**.
 
