@@ -3,6 +3,7 @@ package com.ecommerce.auth_service.service;
 import com.ecommerce.auth_service.dto.LoginRequest;
 import com.ecommerce.auth_service.dto.LoginResponse;
 import com.ecommerce.auth_service.dto.RegisterRequest;
+import com.ecommerce.auth_service.dto.UserResponse;
 import com.ecommerce.auth_service.entity.User;
 import com.ecommerce.auth_service.repository.UserRepository;
 import com.ecommerce.auth_service.security.JwtService;
@@ -27,23 +28,36 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    public User register(RegisterRequest request) {
+    public UserResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByUsername(request.username())) {
-            throw new RuntimeException("Username already exists");
-        }
+    	public UserResponse register(RegisterRequest request) {
 
-        User user = new User();
+    	    if (userRepository.existsByUsername(request.username())) {
+    	        throw new RuntimeException("Username already exists");
+    	    }
 
-        user.setUsername(request.username());
+    	    User user = new User();
 
-        user.setPassword(
-                passwordEncoder.encode(request.password())
-        );
+    	    user.setUsername(request.username());
 
-        user.setRole("USER");
+    	    user.setPassword(
+    	            passwordEncoder.encode(request.password())
+    	    );
 
-        return userRepository.save(user);
+    	    user.setRole(
+    	            request.username().equals("admin")
+    	                    ? "ADMIN"
+    	                    : "USER"
+    	    );
+
+    	    User savedUser = userRepository.save(user);
+
+    	    return new UserResponse(
+    	            savedUser.getId(),
+    	            savedUser.getUsername(),
+    	            savedUser.getRole()
+    	    );
+    	}
     }
 
     public LoginResponse login(LoginRequest request) {
