@@ -5,7 +5,13 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "shipments")
+@Table(name = "shipments",
+indexes = {
+        @Index(
+            name = "idx_shipping_order_id",
+            columnList = "orderId"
+        )
+    })
 public class Shipping {
 
     @Id

@@ -3,7 +3,13 @@ package com.ecommerce.auth_service.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users",
+	   indexes = {
+        @Index(
+            name = "idx_users_username",
+            columnList = "username"
+        )
+    })
 public class User {
 
     @Id

@@ -1,5 +1,8 @@
 package com.ecommerce.auth_service.dto;
 
-public class UserResponse {
-
+public record UserResponse(
+        Long id,
+        String username,
+        String role
+) {
 }
